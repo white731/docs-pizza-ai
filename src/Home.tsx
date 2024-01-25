@@ -23,7 +23,7 @@ function Copyright() {
     <Typography variant="body2" color="text.secondary" align="center">
       {"Copyright © "}
       <Link color="inherit" href="https://mui.com/">
-        Your Website
+        www.bestidahopizza.com
       </Link>{" "}
       {new Date().getFullYear()}
       {"."}
@@ -31,93 +31,11 @@ function Copyright() {
   );
 }
 
-const menu1 = () => {
-  return (
-    <Container sx={{ py: 8 }} maxWidth="md">
-      {/* End hero unit */}
-      <Grid container spacing={4}>
-        {cards.map((card) => (
-          <Grid item key={card} xs={12} sm={6} md={4}>
-            <Card
-              sx={{
-                height: "100%",
-                display: "flex",
-                flexDirection: "column",
-              }}
-            >
-              <CardMedia
-                component="div"
-                sx={{
-                  // 16:9
-                  pt: "56.25%",
-                }}
-                image="https://source.unsplash.com/random?wallpapers"
-              />
-              <CardContent sx={{ flexGrow: 1 }}>
-                <Typography gutterBottom variant="h5" component="h2">
-                  Heading
-                </Typography>
-                <Typography>
-                  This is a media card. You can use this section to describe the
-                  content.
-                </Typography>
-              </CardContent>
-              <CardActions>
-                <Button size="small">View</Button>
-                <Button size="small">Edit</Button>
-              </CardActions>
-            </Card>
-          </Grid>
-        ))}
-      </Grid>
-    </Container>
-  );
-};
-
-const MediaCard = (props: {
-  heading: string;
-  description: string;
-  cta: string;
-  image: string;
-}) => {
-  return (
-    <Card
-      sx={{
-        // height: "100%",
-        display: "flex",
-        flexDirection: "column",
-      }}
-    >
-      <CardMedia
-        component="div"
-        sx={{
-          // 16:9
-          // height: "100%",
-          pt: "56.25%",
-        }}
-        image={props.image}
-      />
-      <CardContent sx={{ flexGrow: 1 }}>
-        <Typography gutterBottom variant="h5" component="h2">
-          {props.heading}
-        </Typography>
-        <Typography>{props.description}</Typography>
-      </CardContent>
-      <CardActions>
-        <Button size="small">{props.cta}</Button>
-      </CardActions>
-    </Card>
-  );
-};
-
-const cards = [1, 2, 3, 4, 5, 6, 7, 8, 9];
-
 // TODO remove, this demo shouldn't need to reset the theme.
 const defaultTheme = createTheme();
 
 export default function Home(props: { app: any }) {
   const [prompt, setPrompt] = React.useState("");
-  const [output, setOutput] = React.useState("");
   const [fetching, setFetching] = React.useState(false);
   const [conversation, setConversation] = React.useState([
     {
@@ -127,17 +45,27 @@ export default function Home(props: { app: any }) {
     },
   ]);
 
+  const messagesEndRef = React.useRef<HTMLDivElement | null>(null);
+
+  const scrollToBottom = () => {
+    console.log(messagesEndRef);
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  };
+
+  React.useEffect(() => {
+    scrollToBottom();
+  }, [conversation]);
+
   const handleSubmit = async (e: any) => {
     e.preventDefault();
-
     const testAPI =
       "http://127.0.0.1:5001/docs-pizza/us-central1/chatCompletion";
     const prodAPI =
       "https://us-central1-docs-pizza.cloudfunctions.net/chatCompletion";
     try {
-      let newConvo = conversation;
-      newConvo.push({ speaker: "user", dialog: prompt });
-      setConversation(newConvo);
+      // setConversation([...conversation, ]);
 
       const data = {
         prompt,
@@ -145,14 +73,16 @@ export default function Home(props: { app: any }) {
 
       setFetching(true);
       console.log(data);
-      const result = await axios.post(prodAPI, { data });
+      const result = await axios.post(testAPI, { data });
       console.log(result);
-      setPrompt("");
+
       const output = (result.data.result as any).aiResponse;
-      setOutput(output);
-      let nextConvo = conversation;
-      nextConvo.push({ speaker: "doc", dialog: output });
-      setConversation(nextConvo);
+      setConversation([
+        ...conversation,
+        { speaker: "user", dialog: prompt },
+        { speaker: "doc", dialog: output },
+      ]);
+      setPrompt("");
     } catch (error: any) {
       console.log(error.code);
       console.log(error.message);
@@ -203,13 +133,16 @@ export default function Home(props: { app: any }) {
               great hours and we're excited to serve you!
             </Typography>
             <Stack
-              sx={{ pt: 4 }}
-              direction="row"
+              sx={{ pt: 4, alignItems: "center" }}
+              direction="column"
               spacing={2}
               justifyContent="center"
             >
-              <Button variant="contained">Place an Order Online</Button>
               <Button variant="outlined">Call Now to Order</Button>
+              <Typography>Or</Typography>
+              <Typography variant="h6">
+                Place an order through our Ai Assistant, Doc!
+              </Typography>
             </Stack>
           </Container>
         </Box>
@@ -237,25 +170,31 @@ export default function Home(props: { app: any }) {
                 flexBasis: "column",
                 flexDirection: "column",
                 overflow: "scroll",
+                overflowY: "auto",
               }}
             >
               {conversation.map((dialog) => {
-                if (dialog.speaker === "doc") {
-                  return (
-                    <Typography sx={{ textAlign: "left", margin: 2 }}>
-                      Doc: {dialog.dialog}
-                    </Typography>
-                  );
-                } else {
-                  return (
-                    <Typography
-                      sx={{ textAlign: "right", marginLeft: 50, margin: 2 }}
-                    >
-                      User: {dialog.dialog}
-                    </Typography>
-                  );
-                }
+                const isDoc = dialog.speaker === "doc";
+
+                return (
+                  <Typography
+                    sx={{
+                      margin: 2,
+                      backgroundColor: isDoc ? "red" : "black",
+                      color: "white",
+                      padding: "10px",
+                      borderRadius: "10px",
+                      display: "inline",
+                      marginBottom: "5px",
+                      inlineSize: "fit-content",
+                      alignSelf: isDoc ? "flex-start" : "flex-end",
+                    }}
+                  >
+                    {isDoc ? "Doc" : "User"}: {dialog.dialog}
+                  </Typography>
+                );
               })}
+              <div ref={messagesEndRef} />
             </CardContent>
           </Card>
           <form
@@ -270,7 +209,6 @@ export default function Home(props: { app: any }) {
               onChange={(e) => setPrompt(e.target.value)}
               value={prompt}
               variant="outlined"
-              multiline
               label="Enter order here"
               maxRows={10}
               sx={{ width: 350, marginBottom: 3 }}
@@ -285,14 +223,10 @@ export default function Home(props: { app: any }) {
               {fetching ? "Processing" : "Submit"}
             </Button>
           </form>
-          <Typography>Order Summary</Typography>
         </Container>
       </main>
       {/* Footer */}
       <Box sx={{ bgcolor: "background.paper", p: 6 }} component="footer">
-        <Typography variant="h6" align="center" gutterBottom>
-          The end of the page
-        </Typography>
         <Typography
           variant="subtitle1"
           align="center"

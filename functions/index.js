@@ -3,18 +3,22 @@
 const functions = require('firebase-functions')
 const admin = require('firebase-admin')
 const OpenAI = require('openai')
+const { defineString } = require('firebase-functions/params')
 
 if (admin.apps.length === 0) {
   admin.initializeApp(functions.config().firebase)
 }
+
+const openAPIKey = defineString('REACT_APP_OPEN_API_KEY')
 
 exports.chatCompletion = functions.https.onCall(async (data, context) => {
   // Your existing Cloud Function logic
 
   const prompt = data.prompt
 
-  const OPEN_API_KEY = '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'
-  const openai = new OpenAI({ apiKey: OPEN_API_KEY })
+  const openai = new OpenAI({
+    apiKey: openAPIKey.value(),
+  })
   const aiModel = 'gpt-3.5-turbo-1106'
   const systemContent =
     'You are an assistant named Doc who works for "Doc\'s Pizza". ' +
