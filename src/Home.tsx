@@ -15,6 +15,8 @@ import Typography from "@mui/material/Typography";
 import Container from "@mui/material/Container";
 import Link from "@mui/material/Link";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
+import { TextField } from "@mui/material";
+import axios from "axios";
 
 function Copyright() {
   return (
@@ -81,7 +83,7 @@ const MediaCard = (props: {
   return (
     <Card
       sx={{
-        height: "100%",
+        // height: "100%",
         display: "flex",
         flexDirection: "column",
       }}
@@ -90,6 +92,7 @@ const MediaCard = (props: {
         component="div"
         sx={{
           // 16:9
+          // height: "100%",
           pt: "56.25%",
         }}
         image={props.image}
@@ -112,7 +115,53 @@ const cards = [1, 2, 3, 4, 5, 6, 7, 8, 9];
 // TODO remove, this demo shouldn't need to reset the theme.
 const defaultTheme = createTheme();
 
-export default function Home() {
+export default function Home(props: { app: any }) {
+  const [prompt, setPrompt] = React.useState("");
+  const [output, setOutput] = React.useState("");
+  const [fetching, setFetching] = React.useState(false);
+  const [conversation, setConversation] = React.useState([
+    {
+      speaker: "doc",
+      dialog:
+        "Just text me your order and I'll be happy to get it started for you.",
+    },
+  ]);
+
+  const handleSubmit = async (e: any) => {
+    e.preventDefault();
+
+    const testAPI =
+      "http://127.0.0.1:5001/docs-pizza/us-central1/chatCompletion";
+    const prodAPI =
+      "https://us-central1-docs-pizza.cloudfunctions.net/chatCompletion";
+    try {
+      let newConvo = conversation;
+      newConvo.push({ speaker: "user", dialog: prompt });
+      setConversation(newConvo);
+
+      const data = {
+        prompt,
+      };
+
+      setFetching(true);
+      console.log(data);
+      const result = await axios.post(prodAPI, { data });
+      console.log(result);
+      setPrompt("");
+      const output = (result.data.result as any).aiResponse;
+      setOutput(output);
+      let nextConvo = conversation;
+      nextConvo.push({ speaker: "doc", dialog: output });
+      setConversation(nextConvo);
+    } catch (error: any) {
+      console.log(error.code);
+      console.log(error.message);
+      console.log(error.details);
+    } finally {
+      setFetching(false);
+    }
+  };
+
   return (
     <ThemeProvider theme={defaultTheme}>
       <CssBaseline />
@@ -164,25 +213,85 @@ export default function Home() {
             </Stack>
           </Container>
         </Box>
-        <Container>
-          <MediaCard
-            heading="Pizza"
-            description="heyo"
-            cta="order now"
-            image="public/images/page1.jpg"
-          />
-          <MediaCard
-            heading="Pizza"
-            description="heyo"
-            cta="order now"
-            image="public/images/page2.jpg"
-          />
+        <Container
+          sx={{
+            display: "flex",
+            justifyContent: "center",
+            flexDirection: "column",
+            alignItems: "center",
+          }}
+        >
+          <Card
+            sx={{
+              height: 400,
+              marginBottom: 3,
+              maxWidth: 350,
+              display: "flex",
+              flexBasis: "column",
+              flexDirection: "column",
+            }}
+          >
+            <CardContent
+              sx={{
+                display: "flex",
+                flexBasis: "column",
+                flexDirection: "column",
+                overflow: "scroll",
+              }}
+            >
+              {conversation.map((dialog) => {
+                if (dialog.speaker === "doc") {
+                  return (
+                    <Typography sx={{ textAlign: "left", margin: 2 }}>
+                      Doc: {dialog.dialog}
+                    </Typography>
+                  );
+                } else {
+                  return (
+                    <Typography
+                      sx={{ textAlign: "right", marginLeft: 50, margin: 2 }}
+                    >
+                      User: {dialog.dialog}
+                    </Typography>
+                  );
+                }
+              })}
+            </CardContent>
+          </Card>
+          <form
+            onSubmit={handleSubmit}
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+            }}
+          >
+            <TextField
+              onChange={(e) => setPrompt(e.target.value)}
+              value={prompt}
+              variant="outlined"
+              multiline
+              label="Enter order here"
+              maxRows={10}
+              sx={{ width: 350, marginBottom: 3 }}
+            />
+
+            <Button
+              type="submit"
+              disabled={fetching}
+              variant="contained"
+              sx={{ width: "300px", marginBottom: 6 }}
+            >
+              {fetching ? "Processing" : "Submit"}
+            </Button>
+          </form>
+          <Typography>Order Summary</Typography>
         </Container>
       </main>
       {/* Footer */}
       <Box sx={{ bgcolor: "background.paper", p: 6 }} component="footer">
         <Typography variant="h6" align="center" gutterBottom>
-          Footer
+          The end of the page
         </Typography>
         <Typography
           variant="subtitle1"
