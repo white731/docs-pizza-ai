@@ -17,6 +17,7 @@ import Link from "@mui/material/Link";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 import { TextField } from "@mui/material";
 import axios from "axios";
+import LocalPizzaIcon from "@mui/icons-material/LocalPizza";
 
 function Copyright() {
   return (
@@ -32,7 +33,17 @@ function Copyright() {
 }
 
 // TODO remove, this demo shouldn't need to reset the theme.
-const defaultTheme = createTheme();
+const defaultTheme = createTheme({
+  palette: {
+    primary: {
+      main: "#cf0505", // Change the primary color
+    },
+    secondary: {
+      main: "#d32f2f", // Change the secondary color
+    },
+    // Add more color overrides as needed
+  },
+});
 
 export default function Home(props: { app: any }) {
   const [prompt, setPrompt] = React.useState("");
@@ -65,15 +76,13 @@ export default function Home(props: { app: any }) {
     const prodAPI =
       "https://us-central1-docs-pizza.cloudfunctions.net/chatCompletion";
     try {
-      // setConversation([...conversation, ]);
-
       const data = {
         prompt,
       };
 
       setFetching(true);
       console.log(data);
-      const result = await axios.post(testAPI, { data });
+      const result = await axios.post(prodAPI, { data });
       console.log(result);
 
       const output = (result.data.result as any).aiResponse;
@@ -97,7 +106,7 @@ export default function Home(props: { app: any }) {
       <CssBaseline />
       <AppBar position="relative">
         <Toolbar>
-          <CameraIcon sx={{ mr: 2 }} />
+          <LocalPizzaIcon sx={{ mr: 2 }} />
           <Typography variant="h6" color="inherit" noWrap>
             Docs Pizza
           </Typography>
@@ -140,7 +149,7 @@ export default function Home(props: { app: any }) {
             >
               <Button variant="outlined">Call Now to Order</Button>
               <Typography>Or</Typography>
-              <Typography variant="h6">
+              <Typography variant="h6" textAlign="center">
                 Place an order through our Ai Assistant, Doc!
               </Typography>
             </Stack>
@@ -155,8 +164,9 @@ export default function Home(props: { app: any }) {
           }}
         >
           <Card
+            raised
             sx={{
-              height: 400,
+              height: 500,
               marginBottom: 3,
               maxWidth: 350,
               display: "flex",
@@ -226,15 +236,7 @@ export default function Home(props: { app: any }) {
         </Container>
       </main>
       {/* Footer */}
-      <Box sx={{ bgcolor: "background.paper", p: 6 }} component="footer">
-        <Typography
-          variant="subtitle1"
-          align="center"
-          color="text.secondary"
-          component="p"
-        >
-          Something here to give the footer a purpose!
-        </Typography>
+      <Box sx={{ bgcolor: "background.paper", p: 3 }} component="footer">
         <Copyright />
       </Box>
       {/* End footer */}
